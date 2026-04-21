@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-proxy
+  namespace: ${ATLAS_NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-proxy
+  template:
+    metadata:
+      labels:
+        app: llm-proxy
+    spec:
+      containers:
+      - name: llm-proxy
+        image: ${ATLAS_REGISTRY}/llm-proxy:${ATLAS_IMAGE_TAG}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ATLAS_PROXY_PORT
+          value: "8090"
+        - name: ATLAS_INFERENCE_URL
+          value: http://llama-server:8080
+        - name: ATLAS_LLAMA_URL
+          value: http://llama-server:8080
+        - name: ATLAS_LENS_URL
+          value: http://geometric-lens:8099
+        - name: ATLAS_SANDBOX_URL
+          value: http://sandbox:8020
+        - name: ATLAS_V3_URL
+          value: http://v3-service:8070
+        - name: ATLAS_AGENT_LOOP
+          value: "1"
+        - name: ATLAS_MODEL_NAME
+          value: Qwen3.5-9B-Q6_K
+        ports:
+        - containerPort: 8090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-proxy
+  namespace: ${ATLAS_NAMESPACE}
+spec:
+  type: NodePort
+  ports:
+  - port: 8090
+    targetPort: 8090
+    nodePort: ${ATLAS_PROXY_NODEPORT}
+  selector:
+    app: llm-proxy

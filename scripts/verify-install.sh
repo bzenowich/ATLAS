@@ -110,29 +110,13 @@ check_llm_inference() {
     fi
 }
 
-# Full E2E test
+# Full E2E test (WebGUI access)
 check_e2e() {
-    # Create test user and get API key
-    local register_response=$(curl -sf --max-time "$ATLAS_HEALTH_CHECK_TIMEOUT" \
-        -X POST "http://localhost:${ATLAS_API_PORTAL_NODEPORT}/api/auth/register" \
-        -H "Content-Type: application/json" \
-        -d '{"email":"test@verify.local","password":"testpass123","username":"verifytest"}' 2>/dev/null || echo "")
-
-    if [[ -z "$register_response" ]]; then
-        # User might already exist, try login
-        local login_response=$(curl -sf --max-time "$ATLAS_HEALTH_CHECK_TIMEOUT" \
-            -X POST "http://localhost:${ATLAS_API_PORTAL_NODEPORT}/api/auth/login" \
-            -H "Content-Type: application/json" \
-            -d '{"email":"test@verify.local","password":"testpass123"}' 2>/dev/null || echo "")
-
-        if echo "$login_response" | grep -q "token"; then
-            check_pass "Authentication system working"
-        else
-            check_warn "Could not verify authentication (may need manual test)"
-            return
-        fi
+    if [[ "${ATLAS_ENABLE_WEBGUI:-false}" == "true" ]]; then
+        local nodeport=${ATLAS_WEBGUI_NODEPORT:-30000}
+        check_service "WebGUI Login Page" "http://localhost:${nodeport}/" "$ATLAS_HEALTH_CHECK_TIMEOUT"
     else
-        check_pass "User registration working"
+        log_info "  Skipping E2E authentication test (WebGUI disabled)"
     fi
 }
 
@@ -210,17 +194,24 @@ main() {
     check_pod "llama-server"
     check_pod "geometric-lens"
     check_pod "llm-proxy"
+    check_pod "v3-service"
     check_pod "sandbox"
+    if [[ "${ATLAS_ENABLE_WEBGUI:-false}" == "true" ]]; then
+        check_pod "webgui"
+    fi
 
     # Service health endpoints - using NodePort values from config
     echo ""
     echo "Service Health:"
     check_service "LLM Server" "http://localhost:${ATLAS_LLAMA_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
-    check_service "API Portal" "http://localhost:${ATLAS_API_PORTAL_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
-    check_service "Geometric Lens" "http://localhost:${ATLAS_RAG_API_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
-    check_service "LLM Proxy" "http://localhost:${ATLAS_LLM_PROXY_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
+    check_service "Geometric Lens" "http://localhost:${ATLAS_LENS_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
+    check_service "LLM Proxy" "http://localhost:${ATLAS_PROXY_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
+    check_service "V3 Pipeline" "http://localhost:${ATLAS_V3_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
     check_service "Sandbox" "http://localhost:${ATLAS_SANDBOX_NODEPORT}/health" "$ATLAS_HEALTH_CHECK_TIMEOUT"
-    check_service "Dashboard" "http://localhost:${ATLAS_DASHBOARD_NODEPORT}/" "$ATLAS_HEALTH_CHECK_TIMEOUT"
+    
+    if [[ "${ATLAS_ENABLE_WEBGUI:-false}" == "true" ]]; then
+        check_service "WebGUI" "http://localhost:${ATLAS_WEBGUI_NODEPORT}/" "$ATLAS_HEALTH_CHECK_TIMEOUT"
+    fi
 
     # Functional checks
     echo ""

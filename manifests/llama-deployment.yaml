@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama-server
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama-server
+  template:
+    metadata:
+      labels:
+        app: llama-server
+    spec:
+      runtimeClassName: nvidia
+      containers:
+      - name: llama-server
+        image: localhost/llama-server:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MODEL_PATH
+          value: /models/Qwen3.5-9B-Q6_K.gguf
+        - name: CONTEXT_LENGTH
+          value: "32768"
+        - name: GPU_LAYERS
+          value: "99"
+        - name: PARALLEL_SLOTS
+          value: "1"
+        - name: FLASH_ATTENTION
+          value: "true"
+        - name: BATCH_SIZE
+          value: "4096"
+        - name: UBATCH_SIZE
+          value: "4096"
+        - name: MLOCK
+          value: "true"
+        - name: CONT_BATCHING
+          value: "true"
+        - name: METRICS
+          value: "true"
+        - name: NO_BUFFER
+          value: "true"
+        - name: POOLING
+          value: "mean"
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: models
+          mountPath: /models
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: 8Gi
+          requests:
+            nvidia.com/gpu: 1
+            memory: 8Gi
+      volumes:
+      - name: models
+        hostPath:
+          path: /opt/atlas/models
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama-server
+  namespace: atlas
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 32735
+  selector:
+    app: llama-server

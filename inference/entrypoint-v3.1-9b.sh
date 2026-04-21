@@ -39,7 +39,8 @@ echo "  Model: $MODEL_FILE"
 echo "  Context: $CTX_LENGTH | KV: K=$KV_CACHE_K V=$KV_CACHE_V | Parallel: $PARALLEL"
 echo "  Embeddings: ENABLED (4096-dim Qwen3.5 self-embeddings)"
 echo "  Speculative decoding: DISABLED (not supported for Qwen3.5)"
-echo "  Slot save path: $SLOT_SAVE_PATH"
+echo "  Metrics: ${METRICS:-false}"
+echo "  No-Buffer: ${NO_BUFFER:-false}"
 
 exec /usr/local/bin/llama-server \
   -m "$MODEL_FILE" \
@@ -54,6 +55,9 @@ exec /usr/local/bin/llama-server \
   --mlock \
   -b 4096 \
   -ub 4096 \
+  ${METRICS:+--metrics} \
+  ${NO_BUFFER:+--no-context-shift} \
+  ${POOLING:+--pooling $POOLING} \
   --slot-save-path "$SLOT_SAVE_PATH" \
   --ctx-checkpoints 0 \
   --no-cache-prompt \

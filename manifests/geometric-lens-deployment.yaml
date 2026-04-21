@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geometric-lens
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geometric-lens
+  template:
+    metadata:
+      labels:
+        app: geometric-lens
+    spec:
+      containers:
+      - name: geometric-lens
+        image: localhost/geometric-lens:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: LLAMA_URL
+          value: http://llama-server:8080
+        - name: LLAMA_EMBED_URL
+          value: http://llama-server:8080
+        - name: GEOMETRIC_LENS_ENABLED
+          value: "true"
+        - name: REDIS_URL
+          value: redis://redis:6379/0
+        - name: PROJECT_DATA_DIR
+          value: /data/projects
+        ports:
+        - containerPort: 8099
+        volumeMounts:
+        - name: projects
+          mountPath: /data/projects
+      volumes:
+      - name: projects
+        hostPath:
+          path: /opt/atlas/data/projects
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: geometric-lens
+  namespace: atlas
+spec:
+  type: NodePort
+  ports:
+  - port: 8099
+    targetPort: 8099
+    nodePort: 31144
+  selector:
+    app: geometric-lens

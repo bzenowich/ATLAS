@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webgui
+  namespace: ${ATLAS_NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webgui
+  template:
+    metadata:
+      labels:
+        app: webgui
+    spec:
+      containers:
+      - name: webgui
+        image: ghcr.io/open-webui/open-webui:main
+        env:
+        - name: OPENAI_API_BASE_URL
+          value: http://llama-server:8080/v1
+        - name: OPENAI_API_KEY
+          value: ${ATLAS_WEBGUI_SECRET}
+        - name: WEBUI_SECRET_KEY
+          value: ${ATLAS_WEBGUI_SECRET}
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: webgui-data
+          mountPath: /app/backend/data
+      volumes:
+      - name: webgui-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webgui
+  namespace: ${ATLAS_NAMESPACE}
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: ${ATLAS_WEBGUI_NODEPORT}
+  selector:
+    app: webgui

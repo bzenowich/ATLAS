@@ -18,6 +18,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Model URLs (Hugging Face)
 # Note: Filenames are case-sensitive on Hugging Face
+QWEN35_9B_Q6_URL="https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q6_K.gguf"
 QWEN3_14B_Q4_URL="https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf"
 QWEN3_14B_Q6_URL="https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q6_K.gguf"
 QWEN3_0_6B_URL="https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"
@@ -80,18 +81,11 @@ main() {
         HF_CLI=false
     fi
 
-    # Select model based on VRAM
-    GPU_MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 || echo "0")
+    # Use Qwen3.5-9B as default (V3.1)
+    MAIN_MODEL_URL="$QWEN35_9B_Q6_URL"
+    MAIN_MODEL_FILE="Qwen3.5-9B-Q6_K.gguf"
 
-    if [[ $GPU_MEM -ge 20000 ]]; then
-        log_info "20GB+ VRAM detected, downloading Q6_K quantization"
-        MAIN_MODEL_URL="$QWEN3_14B_Q6_URL"
-        MAIN_MODEL_FILE="Qwen3-14B-Q6_K.gguf"
-    else
-        log_info "Using Q4_K_M quantization for ${GPU_MEM}MB VRAM"
-        MAIN_MODEL_URL="$QWEN3_14B_Q4_URL"
-        MAIN_MODEL_FILE="Qwen3-14B-Q4_K_M.gguf"
-    fi
+    log_info "Defaulting to $MAIN_MODEL_FILE (V3.1)"
 
     # Download main model
     download_model "$MAIN_MODEL_URL" "$MAIN_MODEL_FILE"

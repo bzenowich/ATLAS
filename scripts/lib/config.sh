@@ -16,6 +16,10 @@ GREEN="${GREEN:-\033[0;32m}"
 YELLOW="${YELLOW:-\033[1;33m}"
 NC="${NC:-\033[0m}"
 
+log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
 # Setup kubeconfig - try multiple locations
 # Checks that files are both present AND readable by current user
 setup_kubeconfig() {
@@ -106,12 +110,12 @@ validate_config() {
 
     # Check port conflicts (NodePorts must be unique)
     local ports=(
-        "$ATLAS_API_PORTAL_NODEPORT"
-        "$ATLAS_LLM_PROXY_NODEPORT"
-        "$ATLAS_RAG_API_NODEPORT"
-        "$ATLAS_DASHBOARD_NODEPORT"
+        "$ATLAS_WEBGUI_NODEPORT"
+        "$ATLAS_PROXY_NODEPORT"
+        "$ATLAS_LENS_NODEPORT"
         "$ATLAS_LLAMA_NODEPORT"
         "$ATLAS_SANDBOX_NODEPORT"
+        "$ATLAS_V3_NODEPORT"
     )
 
     local seen=()

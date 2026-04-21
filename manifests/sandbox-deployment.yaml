@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sandbox
+  template:
+    metadata:
+      labels:
+        app: sandbox
+    spec:
+      containers:
+      - name: sandbox
+        image: localhost/sandbox:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8020
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox
+  namespace: atlas
+spec:
+  type: NodePort
+  ports:
+  - port: 8020
+    targetPort: 8020
+    nodePort: 30820
+  selector:
+    app: sandbox

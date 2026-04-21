@@ -8,14 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/config.sh"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+# Colors for output (inherited from lib/config.sh)
 
 # Detect container runtime
 detect_runtime() {
@@ -87,17 +80,13 @@ main() {
     RUNTIME=$(detect_runtime)
     log_info "Using container runtime: $RUNTIME"
 
-    # Core services (in k8s root)
+    # Core services
     declare -a CORE_IMAGES=(
-        "llama-server:$K8S_DIR/llama-server"
+        "llama-server:$K8S_DIR/inference"
         "geometric-lens:$K8S_DIR/geometric-lens"
-        "llm-proxy:$K8S_DIR/llm-proxy"
-    )
-
-    # Atlas services (in k8s/atlas)
-    declare -a ATLAS_IMAGES=(
-        "sandbox:$K8S_DIR/atlas/sandbox"
-        # atlas-trainer: V1 LoRA training, moved to atlas/v1_archived/ (V3.1 uses frozen model)
+        "llm-proxy:$K8S_DIR/atlas-proxy"
+        "v3-service:$K8S_DIR/v3-service"
+        "sandbox:$K8S_DIR/sandbox"
     )
 
     # Build all core images
@@ -106,16 +95,18 @@ main() {
     for entry in "${CORE_IMAGES[@]}"; do
         name="${entry%%:*}"
         dir="${entry#*:}"
-        build_image "$name" "$dir" "$RUNTIME"
-    done
-
-    # Build all atlas images
-    echo ""
-    echo "Building Atlas service images..."
-    for entry in "${ATLAS_IMAGES[@]}"; do
-        name="${entry%%:*}"
-        dir="${entry#*:}"
-        build_image "$name" "$dir" "$RUNTIME"
+        
+        # Special cases that need root context or specific flags
+        if [[ "$name" == "llama-server" ]]; then
+            log_info "Building $name (optimized for RTX 3060)..."
+            # User has RTX 3060 (Ampere = 86)
+            $RUNTIME build --build-arg CUDA_ARCH=86 -t "${ATLAS_REGISTRY}/$name:${ATLAS_IMAGE_TAG}" -f "$dir/Dockerfile.v31" "$dir"
+        elif [[ "$name" == "v3-service" ]]; then
+            log_info "Building $name..."
+            $RUNTIME build -t "${ATLAS_REGISTRY}/$name:${ATLAS_IMAGE_TAG}" -f "$dir/Dockerfile" "$K8S_DIR"
+        else
+            build_image "$name" "$dir" "$RUNTIME"
+        fi
     done
 
     # Import to K3s
@@ -125,11 +116,6 @@ main() {
         log_warn "K3s import requires sudo - you may be prompted for your password"
     fi
     for entry in "${CORE_IMAGES[@]}"; do
-        name="${entry%%:*}"
-        import_to_k3s "$name" "$RUNTIME"
-    done
-
-    for entry in "${ATLAS_IMAGES[@]}"; do
         name="${entry%%:*}"
         import_to_k3s "$name" "$RUNTIME"
     done

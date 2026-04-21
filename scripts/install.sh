@@ -7,15 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/config.sh"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+# Colors for output (inherited from lib/config.sh)
 
 # Validate paths in configuration
 validate_paths() {
@@ -186,8 +178,15 @@ check_images_exist() {
         "llama-server"
         "geometric-lens"
         "llm-proxy"
+        "v3-service"
         "sandbox"
     )
+
+    if [[ "$ATLAS_ENABLE_WEBGUI" == "true" ]]; then
+        # Open WebUI is external, we don't build it but it should be in containerd or will be pulled
+        # Skip checking for it in our local build list
+        true
+    fi
 
     # Get list of images once (requires root for k3s ctr)
     local images_list
@@ -398,7 +397,11 @@ process_templates() {
     local template_dir="$K8S_DIR/templates"
     local manifest_dir="$K8S_DIR/manifests"
 
-    # Ensure manifests directory exists
+    # Ensure manifests directory is clean (remove old files)
+    if [[ -d "$manifest_dir" ]]; then
+        log_info "  Cleaning old manifests..."
+        rm -f "$manifest_dir"/*.yaml
+    fi
     mkdir -p "$manifest_dir"
 
     # Export all ATLAS_ variables for envsubst
@@ -418,11 +421,13 @@ process_templates() {
 
 # Deploy manifests
 deploy_manifests() {
+    log_info "Cleaning up legacy resources if any..."
+    "$SCRIPT_DIR/cleanup-legacy.sh"
+
     log_info "Deploying ATLAS services..."
 
     # Process templates first to substitute config values
     process_templates
-
 
     # Deploy infrastructure first (Redis is dependency)
     log_info "Deploying infrastructure..."
@@ -437,14 +442,12 @@ deploy_manifests() {
     kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/llama-deployment.yaml"
     kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/geometric-lens-deployment.yaml"
     kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/llm-proxy-deployment.yaml"
-
-    # Deploy Atlas services
-    log_info "Deploying Atlas services..."
+    kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/v3-service-deployment.yaml"
     kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/sandbox-deployment.yaml"
 
-    # Apply training CronJob if enabled
-    if [[ "$ATLAS_ENABLE_TRAINING" == "true" ]]; then
-        kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/training-cronjob.yaml" || true
+    # Apply WebGUI if enabled
+    if [[ "$ATLAS_ENABLE_WEBGUI" == "true" ]]; then
+        kubectl apply -n "$ATLAS_NAMESPACE" -f "$K8S_DIR/manifests/webgui-deployment.yaml" || true
     fi
 
     log_info "Manifests deployed"
@@ -454,13 +457,31 @@ deploy_manifests() {
 wait_for_services() {
     log_info "Waiting for all services to be ready..."
 
-    # Service names as defined in deployments
+    local services="llama-server geometric-lens llm-proxy v3-service sandbox"
+    if [[ "${ATLAS_ENABLE_WEBGUI:-false}" == "true" ]]; then
+        services="$services webgui"
+    fi
 
-    for svc in $SERVICES; do
+    for svc in $services; do
         log_info "Waiting for $svc..."
-        kubectl wait --for=condition=Ready pod -l app=$svc -n "$ATLAS_NAMESPACE" --timeout=300s || {
-            log_warn "$svc not ready within timeout, continuing..."
-        }
+        
+        # Give Kubernetes a few seconds to actually create the pod
+        local found=false
+        for i in {1..5}; do
+            if kubectl get pod -l app=$svc -n "$ATLAS_NAMESPACE" 2>/dev/null | grep -q "$svc"; then
+                found=true
+                break
+            fi
+            sleep 2
+        done
+
+        if [[ "$found" == "true" ]]; then
+            kubectl wait --for=condition=Ready pod -l app=$svc -n "$ATLAS_NAMESPACE" --timeout=300s || {
+                log_warn "$svc not ready within timeout, continuing..."
+            }
+        else
+            log_error "No pod found for $svc after 10s. Deployment might have failed."
+        fi
     done
 
     log_info "All services deployed"
@@ -528,10 +549,13 @@ main() {
     echo "  2. Verify installation: ./scripts/verify-install.sh"
     echo ""
     echo "Service endpoints:"
-    echo "  API Portal:  http://${ATLAS_NODE_IP}:${ATLAS_API_PORTAL_NODEPORT}"
-    echo "  LLM Proxy:   http://${ATLAS_NODE_IP}:${ATLAS_LLM_PROXY_NODEPORT}"
-    echo "  Geometric Lens: http://${ATLAS_NODE_IP}:${ATLAS_RAG_API_NODEPORT}"
-    echo "  Dashboard:   http://${ATLAS_NODE_IP}:${ATLAS_DASHBOARD_NODEPORT}"
+    if [[ "$ATLAS_ENABLE_WEBGUI" == "true" ]]; then
+        echo "  WebGUI:      http://${ATLAS_NODE_IP}:${ATLAS_WEBGUI_NODEPORT}"
+    fi
+    echo "  LLM Proxy:   http://${ATLAS_NODE_IP}:${ATLAS_PROXY_NODEPORT}"
+    echo "  Llama Server: http://${ATLAS_NODE_IP}:${ATLAS_LLAMA_NODEPORT}"
+    echo "  Geometric Lens: http://${ATLAS_NODE_IP}:${ATLAS_LENS_NODEPORT}"
+    echo "  V3 Pipeline: http://${ATLAS_NODE_IP}:${ATLAS_V3_NODEPORT}"
     echo ""
 }
 

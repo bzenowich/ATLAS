@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: v3-service
+  namespace: atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: v3-service
+  template:
+    metadata:
+      labels:
+        app: v3-service
+    spec:
+      containers:
+      - name: v3-service
+        image: localhost/v3-service:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ATLAS_INFERENCE_URL
+          value: http://llama-server:8080
+        - name: ATLAS_LENS_URL
+          value: http://geometric-lens:8099
+        - name: ATLAS_SANDBOX_URL
+          value: http://sandbox:8020
+        - name: ATLAS_MODEL_NAME
+          value: Qwen3.5-9B-Q6_K
+        ports:
+        - containerPort: 8070
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: v3-service
+  namespace: atlas
+spec:
+  type: NodePort
+  ports:
+  - port: 8070
+    targetPort: 8070
+    nodePort: 30070
+  selector:
+    app: v3-service
