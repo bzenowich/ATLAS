@@ -5,7 +5,7 @@
   send_undo_reply: true
   examples_as_sys_msg: true
   extra_params:
-    max_tokens: 32768
+    max_tokens: 65536
     temperature: 0.3
   cache_control: false
   caches_by_default: false

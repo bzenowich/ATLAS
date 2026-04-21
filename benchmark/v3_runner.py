@@ -95,7 +95,7 @@ from benchmark.v3.embedding_store import EmbeddingWriter
 RAG_API_URL = os.environ.get("RAG_API_URL", "http://localhost:31144")
 LLAMA_URL = os.environ.get("LLAMA_URL", f"http://localhost:{config._conf.get('ATLAS_LLAMA_NODEPORT', '32735')}")
 # Published Qwen3.5 benchmarks use: temp=0.6, top_k=20, top_p=0.95,
-# max_tokens=32768+, thinking mode enabled. Match their settings.
+# max_tokens=65536+, thinking mode enabled. Match their settings.
 MAX_TOKENS = 8192
 BASE_TEMPERATURE = 0.6  # Qwen3.5 recommended for coding with thinking
 DIVERSITY_TEMPERATURE = 0.8  # Slightly higher for candidate diversity

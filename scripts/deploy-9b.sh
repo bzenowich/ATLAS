@@ -11,7 +11,7 @@
 #   - Model: Qwen3.5-9B-Q6_K.gguf (~7.5GB)
 #   - No draft model (spec decode not supported for Qwen3.5)
 #   - Parallel: 2 (more VRAM headroom without draft model)
-#   - Context: 32768 (Qwen3.5 supports 128K, but 32K is practical)
+#   - Context: 65536 (Qwen3.5 supports 128K, but 64K is practical)
 #   - Embeddings: 4096-dim (vs 5120-dim for 14B)
 
 set -e
@@ -44,7 +44,7 @@ kubectl patch deployment llama-server -n atlas --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "localhost/llama-server:v3.1-9b"},
   {"op": "replace", "path": "/spec/template/spec/containers/0/env", "value": [
     {"name": "MODEL_PATH", "value": "/models/Qwen3.5-9B-Q6_K.gguf"},
-    {"name": "CONTEXT_LENGTH", "value": "32768"},
+    {"name": "CONTEXT_LENGTH", "value": "65536"},
     {"name": "GPU_LAYERS", "value": "99"},
     {"name": "PARALLEL_SLOTS", "value": "2"},
     {"name": "GGML_CUDA_NO_PINNED", "value": "0"},

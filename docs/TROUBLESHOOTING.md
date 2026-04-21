@@ -154,7 +154,7 @@ The filename must match `ATLAS_MODEL_FILE` in `.env` (default: `Qwen3.5-9B-Q6_K.
 **Fix:** The 9B Q6_K model needs ~8.2 GB VRAM (model + KV cache). Ensure:
 1. No other GPU processes are running (`nvidia-smi` — check for other CUDA processes)
 2. You have 16GB+ VRAM
-3. Context size isn't set too high (default 32K is fine, don't increase without checking VRAM)
+3. Context size isn't set too high (default 64K is fine, don't increase without checking VRAM)
 
 ```bash
 # Kill other GPU processes if needed
@@ -183,7 +183,7 @@ If this returns raw text instead of JSON, your llama.cpp build doesn't support `
 
 **Symptom:** Tool call arguments get truncated. `write_file` fails with "unexpected end of JSON" or proxy logs show "truncation detected".
 
-**Fix:** Context size should be 32768 (default in Docker Compose). Check:
+**Fix:** Context size should be 65536 (default in Docker Compose). Check:
 ```bash
 # Docker Compose
 grep CTX_SIZE .env

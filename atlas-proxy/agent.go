@@ -282,7 +282,7 @@ func callLLMConstrained(ctx *AgentContext, schemaJSON string) (string, int, erro
 		"model":       modelName,
 		"messages":    messages,
 		"temperature": 0.3,
-		"max_tokens":  32768,
+		"max_tokens":  65536,
 		"stream":      false,
 		"response_format": map[string]string{
 			"type": "json_object",

@@ -233,7 +233,7 @@ Every file in the repository. Click any directory in the tree to jump to its des
 
 | File | Description |
 |------|-------------|
-| [`.aider.model.metadata.json`](../.aider.model.metadata.json) | Aider model metadata: token limits (32K), cost ($0 — local), provider (openai) |
+| [`.aider.model.metadata.json`](../.aider.model.metadata.json) | Aider model metadata: token limits (64K), cost ($0 — local), provider (openai) |
 | [`.aider.model.settings.yml`](../.aider.model.settings.yml) | Aider behavior: whole-file edit format, repo map enabled, streaming on, temperature 0.3 |
 | [`.env.example`](../.env.example) | Docker Compose env template: model path, ports (8080/8099/8070/30820/8090), context size |
 | [`atlas.conf.example`](../atlas.conf.example) | K3s deployment config: model, GPU layers, parallel slots, NodePorts, namespace |

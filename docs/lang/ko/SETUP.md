@@ -181,7 +181,7 @@ pip install fastapi uvicorn pylint pytest pydantic
 llama-server \
   --model models/Qwen3.5-9B-Q6_K.gguf \
   --host 0.0.0.0 --port 8080 \
-  --ctx-size 32768 --n-gpu-layers 99 --no-mmap
+  --ctx-size 65536 --n-gpu-layers 99 --no-mmap
 
 # 터미널 2: Geometric Lens
 cd geometric-lens
@@ -294,7 +294,7 @@ K3s는 설정에 `.env`가 아닌 `atlas.conf`를 사용합니다. Docker Compos
 | 설정 항목 | Docker Compose | K3s |
 |-----------|---------------|-----|
 | 설정 파일 | `.env` | `atlas.conf` |
-| 컨텍스트 크기 | 32K | 슬롯당 40K (x 4 슬롯 = 총 160K) |
+| 컨텍스트 크기 | 64K | 슬롯당 40K (x 4 슬롯 = 총 160K) |
 | 병렬 슬롯 | 1 (암묵적) | 4 |
 | Flash attention | 꺼짐 | 켜짐 |
 | KV 캐시 양자화 | 없음 | q8_0 (키) + q4_0 (값) |

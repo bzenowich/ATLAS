@@ -25,7 +25,7 @@ These variables are read by `docker-compose.yml` and control host-side port mapp
 | `ATLAS_MODELS_DIR` | `./models` | Host path to directory containing GGUF model weights |
 | `ATLAS_MODEL_FILE` | `Qwen3.5-9B-Q6_K.gguf` | Model filename (must exist in ATLAS_MODELS_DIR) |
 | `ATLAS_MODEL_NAME` | `Qwen3.5-9B-Q6_K` | Model identifier used in API responses |
-| `ATLAS_CTX_SIZE` | `32768` | Context window size in tokens |
+| `ATLAS_CTX_SIZE` | `65536` | Context window size in tokens |
 | `ATLAS_LLAMA_PORT` | `8080` | llama-server host port |
 | `ATLAS_LENS_PORT` | `8099` | Geometric Lens host port |
 | `ATLAS_V3_PORT` | `8070` | V3 Pipeline service host port |
@@ -192,7 +192,7 @@ Used when running via `docker compose up`:
 | `--model` | `/models/${ATLAS_MODEL_FILE}` | Path to GGUF model (inside container) |
 | `--host` | `0.0.0.0` | Listen on all interfaces |
 | `--port` | `8080` | Listen port |
-| `--ctx-size` | `${ATLAS_CTX_SIZE:-32768}` | Context window in tokens |
+| `--ctx-size` | `${ATLAS_CTX_SIZE:-65536}` | Context window in tokens |
 | `--n-gpu-layers` | `99` | Offload all layers to GPU |
 | `--no-mmap` | — | Disable mmap for stability |
 
@@ -257,7 +257,7 @@ Two files in the project root control how Aider interacts with the ATLAS proxy:
 | `use_repo_map` | `true` | Include repository file tree in context |
 | `send_undo_reply` | `true` | Notify model when user undoes a change |
 | `examples_as_sys_msg` | `true` | Put few-shot examples in system prompt |
-| `max_tokens` | `32768` | Must match llama-server context window |
+| `max_tokens` | `65536` | Must match llama-server context window |
 | `temperature` | `0.3` | Low temperature for deterministic tool calls |
 | `streaming` | `true` | Enable SSE streaming for real-time output |
 
@@ -265,9 +265,9 @@ Two files in the project root control how Aider interacts with the ATLAS proxy:
 
 | Field | Value | Purpose |
 |-------|-------|---------|
-| `max_tokens` | `32768` | Max output tokens |
-| `max_input_tokens` | `32768` | Max input context |
-| `max_output_tokens` | `32768` | Max generation length |
+| `max_tokens` | `65536` | Max output tokens |
+| `max_input_tokens` | `65536` | Max input context |
+| `max_output_tokens` | `65536` | Max generation length |
 | `input_cost_per_token` | `0` | Free (local inference) |
 | `output_cost_per_token` | `0` | Free (local inference) |
 | `litellm_provider` | `openai` | OpenAI-compatible API protocol |

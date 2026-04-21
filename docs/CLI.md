@@ -75,7 +75,7 @@ flowchart TD
 [atlas] Stack ready. Launching aider...
   llama-server → V3 Pipeline → Proxy v2 → Aider
   Grammar: response_format:json_object | V3 on T2+ files
-  Context: 32K | GPU: RTX 5060 Ti | ~51 tok/s
+  Context: 64K | GPU: RTX 5060 Ti | ~51 tok/s
 ```
 
 Each service is health-checked via `GET /health` before proceeding:
@@ -361,7 +361,7 @@ Generation parameters: `max_tokens=8192`, `temperature=0.6`, `top_k=20`, `top_p=
 
 ## What ATLAS Is Not Good At (Yet)
 
-- **Very large existing codebases** (50+ files): The 32K context window limits how much project context the model can process at once
+- **Very large existing codebases** (50+ files): The 64K context window limits how much project context the model can process at once
 - **Visual output verification**: CSS styling, layout issues, and design quality cannot be verified by the sandbox
 - **Real-time interactive applications**: The model cannot run a browser or test interactive UIs
 - **Adding features to existing projects**: ~67% reliability (L6 test) — the 9B model sometimes over-explores instead of writing code
@@ -457,7 +457,7 @@ All ports and URLs are configurable:
 | `ATLAS_MODEL_NAME` | `Qwen3.5-9B-Q6_K` | Model identifier for API responses |
 | `ATLAS_MODEL_FILE` | `Qwen3.5-9B-Q6_K.gguf` | GGUF filename in models directory |
 | `ATLAS_MODELS_DIR` | `./models` | Host path to model weights |
-| `ATLAS_CTX_SIZE` | `32768` | Context window size (tokens) |
+| `ATLAS_CTX_SIZE` | `65536` | Context window size (tokens) |
 | `ATLAS_AGENT_LOOP` | `1` | Enable agent loop in proxy (`1` = on) |
 | `ATLAS_PROXY_PORT` | `8090` | Proxy listening port |
 | `ATLAS_V3_PORT` | `8070` | V3 service listening port |
@@ -489,7 +489,7 @@ Controls how Aider interacts with the ATLAS proxy:
   send_undo_reply: true        # Notify model when user undoes changes
   examples_as_sys_msg: true    # Include examples in system prompt
   extra_params:
-    max_tokens: 32768          # Match llama-server context window
+    max_tokens: 65536          # Match llama-server context window
     temperature: 0.3           # Low temp for deterministic output
   cache_control: false         # No Anthropic-style caching
   caches_by_default: false
@@ -504,9 +504,9 @@ Tells Aider the model's token limits and cost (local = free):
 ```json
 {
   "openai/atlas": {
-    "max_tokens": 32768,         // Max output tokens
-    "max_input_tokens": 32768,   // Max input context
-    "max_output_tokens": 32768,  // Max generation length
+    "max_tokens": 65536,         // Max output tokens
+    "max_input_tokens": 65536,   // Max input context
+    "max_output_tokens": 65536,  // Max generation length
     "input_cost_per_token": 0,   // Free (local inference)
     "output_cost_per_token": 0,
     "litellm_provider": "openai",// OpenAI-compatible API

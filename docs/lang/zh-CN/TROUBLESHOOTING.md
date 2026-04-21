@@ -156,7 +156,7 @@ ls -la ~/models/Qwen3.5-9B-Q6_K.gguf
 **解决方法：** 9B Q6_K 模型需要约 8.2 GB 显存（模型 + KV 缓存）。请确保：
 1. 没有其他 GPU 进程在运行（`nvidia-smi` - 检查其他 CUDA 进程）
 2. 你有 16GB+ 显存
-3. 上下文大小未设置过高（默认 32K 即可，增大前请检查显存）
+3. 上下文大小未设置过高（默认 64K 即可，增大前请检查显存）
 
 ```bash
 # 如有需要，终止其他 GPU 进程
@@ -185,7 +185,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 **现象：** 工具调用参数被截断。`write_file` 因 "unexpected end of JSON" 失败，或代理日志显示 "truncation detected"。
 
-**解决方法：** 上下文大小应为 32768（Docker Compose 中的默认值）。请检查：
+**解决方法：** 上下文大小应为 65536（Docker Compose 中的默认值）。请检查：
 ```bash
 # Docker Compose
 grep CTX_SIZE .env

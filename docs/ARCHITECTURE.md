@@ -442,12 +442,12 @@ Language aliases accepted: `py`/`python3` (Python), `js`/`node` (JavaScript), `t
 
 ## 7. VRAM Budget
 
-Running on RTX 5060 Ti 16GB with Docker Compose defaults (32K context):
+Running on RTX 5060 Ti 16GB with Docker Compose defaults (64K context):
 
 | Component | VRAM |
 |-----------|------|
 | Qwen3.5-9B-Q6_K model weights | ~6.9 GB |
-| KV cache (32K context) | ~1.3 GB |
+| KV cache (64K context) | ~1.3 GB |
 | **Total llama-server** | **~8.2 GB** |
 | Geometric Lens | 0 (CPU-only, ~12 MB RAM for models, ~128 MB for PyTorch runtime) |
 | v3-service | 0 (CPU-only) |

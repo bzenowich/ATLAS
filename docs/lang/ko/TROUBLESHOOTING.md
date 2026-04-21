@@ -156,7 +156,7 @@ ls -la ~/models/Qwen3.5-9B-Q6_K.gguf
 **해결:** 9B Q6_K 모델은 약 8.2 GB VRAM이 필요합니다 (모델 + KV 캐시). 다음을 확인하십시오:
 1. 다른 GPU 프로세스가 실행 중이지 않은지 (`nvidia-smi` - 다른 CUDA 프로세스 확인)
 2. 16GB 이상의 VRAM이 있는지
-3. 컨텍스트 크기가 너무 크게 설정되지 않았는지 (기본값 32K가 적절하며, VRAM 확인 없이 늘리지 마십시오)
+3. 컨텍스트 크기가 너무 크게 설정되지 않았는지 (기본값 64K가 적절하며, VRAM 확인 없이 늘리지 마십시오)
 
 ```bash
 # 필요한 경우 다른 GPU 프로세스 종료
@@ -185,7 +185,7 @@ JSON 대신 일반 텍스트가 반환되면 llama.cpp 빌드가 `response_forma
 
 **증상:** 도구 호출 인수가 잘립니다. `write_file`이 "unexpected end of JSON"으로 실패하거나 프록시 로그에 "truncation detected"가 표시됩니다.
 
-**해결:** 컨텍스트 크기는 32768이어야 합니다 (Docker Compose의 기본값). 확인:
+**해결:** 컨텍스트 크기는 65536이어야 합니다 (Docker Compose의 기본값). 확인:
 ```bash
 # Docker Compose
 grep CTX_SIZE .env

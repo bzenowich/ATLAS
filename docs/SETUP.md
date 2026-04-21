@@ -179,7 +179,7 @@ Start each service in a separate terminal (or use `&` and redirect to log files)
 llama-server \
   --model models/Qwen3.5-9B-Q6_K.gguf \
   --host 0.0.0.0 --port 8080 \
-  --ctx-size 32768 --n-gpu-layers 99 --no-mmap
+  --ctx-size 65536 --n-gpu-layers 99 --no-mmap
 
 # Terminal 2: Geometric Lens
 cd geometric-lens
@@ -292,7 +292,7 @@ K3s uses `atlas.conf` (not `.env`) for configuration. Key differences from Docke
 | Setting | Docker Compose | K3s |
 |---------|---------------|-----|
 | Config file | `.env` | `atlas.conf` |
-| Context size | 32K | 40K per slot (× 4 slots = 160K total) |
+| Context size | 64K | 40K per slot (× 4 slots = 160K total) |
 | Parallel slots | 1 (implicit) | 4 |
 | Flash attention | Off | On |
 | KV cache quantization | None | q8_0 (keys) + q4_0 (values) |

@@ -44,7 +44,7 @@
 - Exploration budget: 4 consecutive read-only calls triggers nudge, prevents model from over-exploring
 - Pre-injected project context: model sees project file list in system prompt
 - File deletion via fast-path before tier classification
-- Truncation prevention: 32K context, reject write_file for existing files >100 lines, detect truncated args before execution
+- Truncation prevention: 64K context, reject write_file for existing files >100 lines, detect truncated args before execution
 
 ### Deployment
 - Docker Compose (`docker-compose.yml`) for full stack orchestration

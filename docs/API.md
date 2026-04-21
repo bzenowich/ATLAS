@@ -22,7 +22,7 @@ OpenAI-compatible chat completions. When `ATLAS_AGENT_LOOP=1` (default), the pro
     {"role": "system", "content": "..."},
     {"role": "user", "content": "Create a Python hello world script"}
   ],
-  "max_tokens": 32768,
+  "max_tokens": 65536,
   "temperature": 0.3,
   "stream": true,
   "stop": []
